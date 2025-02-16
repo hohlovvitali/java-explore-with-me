@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @Component
 @Slf4j
-public class StatsClient{
+public class StatsClient {
 
     private final RestClient restClient;
 
