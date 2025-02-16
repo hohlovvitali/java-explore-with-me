@@ -1,7 +1,7 @@
 package ru.practicum.ewm.event.service;
 
 import com.querydsl.core.BooleanBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
@@ -38,15 +39,6 @@ public class EventServiceImpl implements EventService {
     private final StatsClient statsClient;
 
     //------ Public ------//
-    @Autowired
-    public EventServiceImpl(EventRepository eventRepository, CategoryRepository categoryRepository,
-                            UserRepository userRepository, StatsClient statsClient) {
-
-        this.eventRepository = eventRepository;
-        this.categoryRepository = categoryRepository;
-        this.userRepository = userRepository;
-        this.statsClient = statsClient;
-    }
 
     @Override
     public EventFullDto findPublicEventById(long id) {
