@@ -1,36 +1,87 @@
 package ru.practicum.ewm;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
-@Service
-public class StatsClient extends BaseClient {
-    @Autowired
-    public StatsClient(@Value("${stats-service.url}") String serverUrl, RestTemplateBuilder builder) {
-        super(builder.uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
-                .requestFactory(() -> new HttpComponentsClientHttpRequestFactory()).build());
+@Component
+@Slf4j
+public class StatsClient{
+
+    private final RestClient restClient;
+
+    public StatsClient(@Value("${stats-service.url}") String serverUrl) {
+        this.restClient = RestClient.create(serverUrl);
     }
 
-    public ResponseEntity<Object> getStats(String start, String end, List<String> uris, Boolean unique) {
-        Map<String, Object> parameters = Map.of(
-                "start", start,
-                "end", end,
-                "uris", uris,
-                "unique", unique
-        );
+    public List<ViewStatsDto> getStats(
+            LocalDateTime start,
+            LocalDateTime end,
+            List<String> uris,
+            Boolean unique) {
 
-        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+        String uri = UriComponentsBuilder.fromPath("/stats")
+                .queryParam("start", encodeDate(start))
+                .queryParam("end", encodeDate(end))
+                .queryParam("uris", String.join(",", uris))
+                .queryParamIfPresent("unique", Optional.ofNullable(unique))
+                .build()
+                .toUriString();
+        try {
+            ResponseEntity<List<ViewStatsDto>> response = restClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<>() {
+                    });
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Stats-Client: запрос getStats выполнен успешно.");
+                return response.getBody();
+            } else {
+                log.debug("Stats-Client: запрос getStats завершился с ошибкой, статус: {}", response.getStatusCode());
+                return Collections.emptyList();
+            }
+        } catch (Exception e) {
+            log.error("Stats-Client: ошибка при получении статистики", e);
+            throw new RuntimeException("Stats-Client: не удалось получить статистику", e);
+        }
     }
 
-    public ResponseEntity<Object> save(EndpointHitDto endpointHit) {
-        return post("/hit", endpointHit);
+    public void save(EndpointHitDto endpointHit) {
+        try {
+            log.info("Stats-Client: отправка запроса на сохранение события {}", endpointHit);
+            ResponseEntity<Void> response = restClient.post()
+                    .uri("/hit")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(endpointHit)
+                    .retrieve()
+                    .toBodilessEntity();
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Stats-Client: событие успешно сохранено, код {}", response.getStatusCode());
+            } else {
+                log.error("Stats-Client: ошибка при сохранении события, код {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            log.error("Stats-Client: ошибка при сохранении события", e);
+            throw new RuntimeException("Stats-Client: не удалось сохранить событие", e);
+        }
+    }
+
+    private String encodeDate(LocalDateTime dateTime) {
+        String formatted = dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return URLEncoder.encode(formatted, StandardCharsets.UTF_8).replace("+", " ").replace("%3A", ":");
     }
 }

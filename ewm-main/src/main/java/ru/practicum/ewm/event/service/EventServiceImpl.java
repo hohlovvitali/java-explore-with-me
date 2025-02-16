@@ -2,6 +2,7 @@ package ru.practicum.ewm.event.service;
 
 import com.querydsl.core.BooleanBuilder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
@@ -39,6 +39,15 @@ public class EventServiceImpl implements EventService {
     private final StatsClient statsClient;
 
     //------ Public ------//
+    @Autowired
+    public EventServiceImpl(EventRepository eventRepository, CategoryRepository categoryRepository,
+                            UserRepository userRepository, StatsClient statsClient) {
+
+        this.eventRepository = eventRepository;
+        this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
+        this.statsClient = statsClient;
+    }
 
     @Override
     public EventFullDto findPublicEventById(long id) {
@@ -293,12 +302,9 @@ public class EventServiceImpl implements EventService {
                 .map(event -> "/events/" + event.getId())
                 .toList();
 
-//        List<ViewStatsDto> viewStatsDto = statsClient.getStats(LocalDateTime.now().minusYears(3).toString(),
-//                LocalDateTime.now().toString(), uri, true);
-        List<ViewStatsDto> viewStatsDto = (List<ViewStatsDto>) statsClient.getStats(LocalDateTime.now().minusYears(3).toString(),
-                LocalDateTime.now().toString(), uri, true);
-//        ResponseEntity<Object> responseEntity = statsClient.getStats(LocalDateTime.now().minusYears(3).toString(),
-//                LocalDateTime.now().toString(), uri, true);
+        List<ViewStatsDto> viewStatsDto = statsClient.getStats(LocalDateTime.now().minusYears(3),
+                LocalDateTime.now(), uri, true);
+
         Map<String, Long> uriHitMap = viewStatsDto.stream()
                 .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits));
         for (Event event : events) {
