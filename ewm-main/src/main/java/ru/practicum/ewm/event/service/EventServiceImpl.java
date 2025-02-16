@@ -1,7 +1,6 @@
 package ru.practicum.ewm.event.service;
 
 import com.querydsl.core.BooleanBuilder;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
