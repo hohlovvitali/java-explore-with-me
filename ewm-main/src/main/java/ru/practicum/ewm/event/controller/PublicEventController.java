@@ -36,9 +36,9 @@ public class PublicEventController {
                                                    @RequestParam(defaultValue = "0") int from,
                                                    @RequestParam(defaultValue = "10") int size,
                                                    HttpServletRequest request) {
-        List<EventShortDto> events = eventService.findAllPublicEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
         log.info("GET:/events; text: {}, categories: {}, paid: {}, rangeStart: {}, " +
                 "rangeEnd: {}, onlyAvailable: {}, from: {}, size: {}.", text, categories, paid, rangeStart, rangeEnd, onlyAvailable, from, size);
+        List<EventShortDto> events = eventService.findAllPublicEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
         String ip = request.getRemoteAddr();
         String path = request.getRequestURI();
         statsClient.save(EndpointHitDto.builder()

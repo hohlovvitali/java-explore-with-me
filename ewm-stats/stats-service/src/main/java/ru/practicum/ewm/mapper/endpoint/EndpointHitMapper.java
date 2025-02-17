@@ -1,29 +1,26 @@
 package ru.practicum.ewm.mapper.endpoint;
 
-import lombok.experimental.UtilityClass;
+import org.springframework.stereotype.Component;
 import ru.practicum.ewm.EndpointHitDto;
 import ru.practicum.ewm.model.endpoint.EndpointHit;
 
-@UtilityClass
+@Component
 public class EndpointHitMapper {
-
-    public static EndpointHit toEntity(EndpointHitDto dto) {
+    public static EndpointHit toEndpointHit(EndpointHitDto endpointHitDto) {
         return EndpointHit.builder()
-                .app(dto.getApp())
-                .ip(dto.getIp())
-                .uri(dto.getUri())
-                .timestamp(dto.getTimestamp())
+                .app(endpointHitDto.getApp())
+                .uri(endpointHitDto.getUri())
+                .ip(endpointHitDto.getIp())
+                .timestamp(endpointHitDto.getTimestamp())
                 .build();
-
     }
 
-    public static EndpointHitDto toDto(EndpointHit entity) {
+    public static EndpointHitDto toEndpointHitDto(EndpointHit endpointHit) {
         return EndpointHitDto.builder()
-                .id(entity.getId())
-                .app(entity.getApp())
-                .ip(entity.getIp())
-                .uri(entity.getUri())
-                .timestamp(entity.getTimestamp())
+                .app(endpointHit.getApp())
+                .uri(endpointHit.getUri())
+                .ip(endpointHit.getIp())
+                .timestamp(endpointHit.getTimestamp())
                 .build();
     }
 }

@@ -2,6 +2,8 @@ package ru.practicum.ewm.event.service;
 
 import com.querydsl.core.BooleanBuilder;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
 
+    private static final Logger log = LoggerFactory.getLogger(EventServiceImpl.class);
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
@@ -58,30 +61,44 @@ public class EventServiceImpl implements EventService {
         PageRequest pageRequest = PageRequest.of(from, size, Sort.by("eventDate").ascending());
         BooleanBuilder builder = new BooleanBuilder();
 
+        log.info("first step");
         if ((rangeStart != null) && (rangeEnd != null) && (rangeStart.isAfter(rangeEnd))) {
             throw new DateTimeException("Время начала не может быть позже времени окончания");
         }
 
+        log.info("2 step");
         if (text != null && !text.isBlank()) {
             builder.and(QEvent.event.annotation.containsIgnoreCase(text.toLowerCase())
                     .or(QEvent.event.description.containsIgnoreCase(text.toLowerCase())));
         }
+
+        log.info("3 step");
         if (paid != null) {
             builder.and(QEvent.event.paid.eq(paid));
         }
+
+        log.info("4 step");
         if (categories != null && !categories.isEmpty()) {
             builder.and(QEvent.event.category.id.in(categories));
         }
+
+        log.info("5 step");
         if (rangeStart != null) {
             builder.and(QEvent.event.eventDate.after(rangeStart));
         }
+
+        log.info("6 step");
         if (rangeEnd != null) {
             builder.and(QEvent.event.eventDate.before(rangeEnd));
         }
+
+        log.info("7 step");
         if (onlyAvailable) {
             builder.and(QEvent.event.participantLimit.eq(0L))
                     .or(QEvent.event.participantLimit.gt(QEvent.event.confirmedRequests));
         }
+
+        log.info("8 step");
         if (builder.getValue() != null) {
             events = eventRepository.findAll(builder.getValue(), pageRequest).getContent();
         } else {

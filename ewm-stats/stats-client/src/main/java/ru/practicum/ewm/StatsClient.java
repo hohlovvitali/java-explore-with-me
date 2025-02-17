@@ -40,6 +40,7 @@ public class StatsClient {
                 .queryParamIfPresent("unique", Optional.ofNullable(unique))
                 .build()
                 .toUriString();
+
         try {
             ResponseEntity<List<ViewStatsDto>> response = restClient.get()
                     .uri(uri)
