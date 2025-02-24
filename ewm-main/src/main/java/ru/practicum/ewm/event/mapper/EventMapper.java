@@ -1,13 +1,15 @@
 package ru.practicum.ewm.event.mapper;
 
+import lombok.experimental.UtilityClass;
 import ru.practicum.ewm.category.mapper.CategoryMapper;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.user.mapper.UserMapper;
 
+@UtilityClass
 public class EventMapper {
 
-    public static EventShortDto toEventShortDto(Event event) {
+    public EventShortDto toEventShortDto(Event event) {
 
         return EventShortDto.builder()
                 .id(event.getId())
@@ -21,7 +23,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static EventFullDto toEventFullDto(Event event) {
+    public EventFullDto toEventFullDto(Event event) {
         return EventFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
@@ -42,7 +44,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static Event toEvent(NewEventDto newEventDto) {
+    public Event toEvent(NewEventDto newEventDto) {
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
                 .description(newEventDto.getDescription())
@@ -55,7 +57,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static UpdateEventRequest toUpdateDto(UpdateEventUserRequest updateEventUserRequest) {
+    public UpdateEventRequest toUpdateDto(UpdateEventUserRequest updateEventUserRequest) {
         return UpdateEventRequest.builder()
                 .annotation(updateEventUserRequest.getAnnotation())
                 .category(updateEventUserRequest.getCategory())
@@ -69,7 +71,7 @@ public class EventMapper {
                 .build();
     }
 
-    public static UpdateEventRequest toUpdateDto(UpdateEventAdminRequest updateEventAdminRequest) {
+    public UpdateEventRequest toUpdateDto(UpdateEventAdminRequest updateEventAdminRequest) {
         return UpdateEventRequest.builder()
                 .annotation(updateEventAdminRequest.getAnnotation())
                 .category(updateEventAdminRequest.getCategory())

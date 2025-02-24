@@ -13,7 +13,6 @@ import ru.practicum.ewm.user.mapper.UserMapper;
 import ru.practicum.ewm.user.model.User;
 import ru.practicum.ewm.user.repository.UserRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,12 +26,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> findUsers(List<Long> ids, int from, int size) {
         PageRequest pageable = PageRequest.of(from, size, Sort.by("id").ascending());
-        List<User> users = new ArrayList<>();
+        List<User> users;
+
         if (ids == null || ids.isEmpty()) {
             users = userRepository.findAll(pageable).getContent();
         } else {
             users = userRepository.findByIdIn(ids, pageable).getContent();
         }
+
         return users.stream()
                 .map(UserMapper::userToDto)
                 .collect(Collectors.toList());
@@ -44,15 +45,21 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(newUserRequest.getEmail())) {
             throw new ValidationException("Пользователь с таким email уже существует.");
         }
+
         User user = userRepository.save(UserMapper.newRequestToUser(newUserRequest));
+
         return UserMapper.userToDto(user);
     }
 
     @Transactional
     @Override
     public void deleteUser(long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден"));
+        checkUserById(userId);
         userRepository.deleteById(userId);
+    }
+
+    private void checkUserById(Long id) {
+        userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id: " + id + " не найден"));
     }
 }

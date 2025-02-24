@@ -8,21 +8,21 @@ import ru.practicum.ewm.category.model.Category;
 @UtilityClass
 public final class CategoryMapper {
 
-    public static CategoryDto toCategoryDto(Category category) {
+    public CategoryDto toCategoryDto(Category category) {
         return CategoryDto.builder()
                 .id(category.getId())
                 .name(category.getName())
                 .build();
     }
 
-    public static Category dtoToCategory(CategoryDto categoryDto) {
+    public Category dtoToCategory(CategoryDto categoryDto) {
         return Category.builder()
                 .id(categoryDto.getId())
                 .name(categoryDto.getName())
                 .build();
     }
 
-    public static Category newCategoryToCategory(NewCategoryDto newCategoryDto) {
+    public Category newCategoryToCategory(NewCategoryDto newCategoryDto) {
         return Category.builder()
                 .name(newCategoryDto.getName())
                 .build();

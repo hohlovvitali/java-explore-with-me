@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class ViewStatsMapper {
 
-    public static ViewStats toEntity(ViewStatsDto dto) {
+    public ViewStats toEntity(ViewStatsDto dto) {
         return ViewStats.builder()
                 .app(dto.getApp())
                 .uri(dto.getUri())
@@ -18,7 +18,7 @@ public class ViewStatsMapper {
                 .build();
     }
 
-    public static ViewStatsDto toDto(ViewStats entity) {
+    public ViewStatsDto toDto(ViewStats entity) {
         return ViewStatsDto.builder()
                 .app(entity.getApp())
                 .uri(entity.getUri())

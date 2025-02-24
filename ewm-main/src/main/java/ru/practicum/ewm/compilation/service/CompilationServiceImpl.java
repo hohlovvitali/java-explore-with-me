@@ -62,22 +62,24 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto createCompilation(NewCompilationDto newCompilationDto) {
         Compilation compilation = CompilationMapper.toCompilation(newCompilationDto);
         List<Event> events = new ArrayList<>();
+
         if (newCompilationDto.getEvents() != null && !newCompilationDto.getEvents().isEmpty()) {
             events = eventRepository.findAllByIdIn(newCompilationDto.getEvents());
             compilation.setEvents(events);
         }
+
         Compilation createdCompilation = compilationRepository.save(compilation);
         List<EventShortDto> eventDtos = events.stream()
                 .map(EventMapper::toEventShortDto)
                 .toList();
+
         return CompilationMapper.toCompilationDto(createdCompilation, eventDtos);
     }
 
     @Transactional
     @Override
     public void deleteCompilation(Long compId) {
-        Compilation compilation = compilationRepository.findById(compId).orElseThrow(
-                () -> new NotFoundException("Подборка с id " + compId + " не найдена"));
+        checkCompilationById(compId);
         compilationRepository.deleteById(compId);
     }
 
@@ -99,5 +101,10 @@ public class CompilationServiceImpl implements CompilationService {
                 .map(EventMapper::toEventShortDto)
                 .toList();
         return CompilationMapper.toCompilationDto(savedCompilation, eventDtos);
+    }
+
+    private void checkCompilationById(Long id) {
+        compilationRepository.findById(id).orElseThrow(
+                () -> new NotFoundException("Подборка с id " + id + " не найдена"));
     }
 }
