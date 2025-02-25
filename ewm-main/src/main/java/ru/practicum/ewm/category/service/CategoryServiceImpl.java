@@ -30,10 +30,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto createCategory(NewCategoryDto newCategoryDto) {
         log.info("Создание новой категории: {}", newCategoryDto.getName());
-        if (categoryRepository.existsByName(newCategoryDto.getName())) {
-            log.warn("Категория с названием '{}' уже существует", newCategoryDto.getName());
-            throw new ValidationException("Категория с таким названием уже существует.");
-        }
+        checkCategoryByName(newCategoryDto.getName());
+
         Category category = categoryRepository.save(CategoryMapper.newCategoryToCategory(newCategoryDto));
         log.info("Категория '{}' успешно создана с ID {}", category.getName(), category.getId());
         return CategoryMapper.toCategoryDto(category);
@@ -43,12 +41,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCategory(long catId) {
         log.info("Удаление категории с ID {}", catId);
-        Category category = categoryRepository.findById(catId)
-                .orElseThrow(() -> new NotFoundException("Категория с ID " + catId + " не найдена."));
+        checkCategoryById(catId);
+
         if (eventRepository.existsByCategoryId(catId)) {
             log.warn("Невозможно удалить категорию с ID {}, так как существуют связанные события", catId);
             throw new ValidationException("Нельзя удалить категорию, к которой привязаны события.");
         }
+
         categoryRepository.deleteById(catId);
         log.info("Категория с ID {} успешно удалена", catId);
     }
@@ -57,13 +56,14 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDto updateCategory(long catId, CategoryDto categoryDto) {
         log.info("Обновление категории с ID {}", catId);
-        Category category = categoryRepository.findById(catId)
-                .orElseThrow(() -> new NotFoundException("Категория с ID " + catId + " не найдена."));
+        checkCategoryById(catId);
+
         Category categoryByName = categoryRepository.findByName(categoryDto.getName());
         if (categoryByName != null && catId != categoryByName.getId()) {
-            log.warn("Категория с названием '{}' уже существует", categoryDto.getName());
+            log.warn("Категория с названием '{}' уже была создана", categoryDto.getName());
             throw new ValidationException("Категория с таким названием уже существует.");
         }
+
         categoryDto.setId(catId);
         Category categorySaved = categoryRepository.save(CategoryMapper.dtoToCategory(categoryDto));
         log.info("Категория с ID {} успешно обновлена", catId);
@@ -88,5 +88,17 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new NotFoundException("Категория с ID " + catId + " не найдена."));
         log.info("Категория с ID {} найдена: {}", catId, category.getName());
         return CategoryMapper.toCategoryDto(category);
+    }
+
+    private void checkCategoryById(long id) {
+        categoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Категория с ID " + id + " не найдена."));
+    }
+
+    private void checkCategoryByName(String catName) {
+        if (categoryRepository.existsByName(catName)) {
+            log.warn("Категория с названием '{}' уже существует", catName);
+            throw new ValidationException("Категория с таким названием уже существует.");
+        }
     }
 }

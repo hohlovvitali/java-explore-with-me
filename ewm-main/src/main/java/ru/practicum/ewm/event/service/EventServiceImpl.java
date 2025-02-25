@@ -72,33 +72,27 @@ public class EventServiceImpl implements EventService {
                     .or(QEvent.event.description.containsIgnoreCase(text.toLowerCase())));
         }
 
-        log.info("3 step");
         if (paid != null) {
             builder.and(QEvent.event.paid.eq(paid));
         }
 
-        log.info("4 step");
         if (categories != null && !categories.isEmpty()) {
             builder.and(QEvent.event.category.id.in(categories));
         }
 
-        log.info("5 step");
         if (rangeStart != null) {
             builder.and(QEvent.event.eventDate.after(rangeStart));
         }
 
-        log.info("6 step");
         if (rangeEnd != null) {
             builder.and(QEvent.event.eventDate.before(rangeEnd));
         }
 
-        log.info("7 step");
         if (onlyAvailable) {
             builder.and(QEvent.event.participantLimit.eq(0L))
                     .or(QEvent.event.participantLimit.gt(QEvent.event.confirmedRequests));
         }
 
-        log.info("8 step");
         if (builder.getValue() != null) {
             events = eventRepository.findAll(builder.getValue(), pageRequest).getContent();
         } else {
@@ -131,24 +125,30 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id: " + userId + " не найден"));
         Category category = categoryRepository.findById(newEventDto.getCategory())
                 .orElseThrow(() -> new NotFoundException("Категория с id: " + newEventDto.getCategory() + "не найдена."));
+
         if (newEventDto.getEventDate().isBefore(LocalDateTime.now().minusHours(2))) {
             throw new DateTimeException("Событие не может быть опубликовано ранее чем за 1 час до даты события.");
         }
+
         if (newEventDto.getPaid() == null) {
             newEventDto.setPaid(false);
         }
+
         if (newEventDto.getRequestModeration() == null) {
             newEventDto.setRequestModeration(true);
         }
+
         if (newEventDto.getParticipantLimit() == null) {
             newEventDto.setParticipantLimit(0L);
         }
+
         Event event = EventMapper.toEvent(newEventDto);
         event.setInitiator(user);
         event.setCategory(category);
         event.setState(EventState.PENDING);
         event.setCreatedOn(LocalDateTime.now());
         event.setConfirmedRequests(0L);
+
         return EventMapper.toEventFullDto(eventRepository.save(event));
     }
 
@@ -157,12 +157,14 @@ public class EventServiceImpl implements EventService {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id: " + userId + " не найден");
         }
+
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Событие с id: " + eventId + " не найдено"));
 
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ValidationException("Пользователь с id: " + userId + " не является инициатором события");
         }
+
         setViews(List.of(event));
         return EventMapper.toEventFullDto(event);
     }
@@ -204,24 +206,31 @@ public class EventServiceImpl implements EventService {
         List<Event> events;
         PageRequest pageRequest = PageRequest.of(from, size);
         BooleanBuilder builder = new BooleanBuilder();
+
         if (users != null && !users.isEmpty()) {
             builder.and(QEvent.event.initiator.id.in(users));
         }
+
         if (states != null && !states.isEmpty()) {
             builder.and(QEvent.event.state.in(states));
         }
+
         if (categories != null && !categories.isEmpty()) {
             builder.and(QEvent.event.category.id.in(categories));
         }
+
         if (rangeStart != null) {
             builder.and(QEvent.event.eventDate.after(rangeStart));
         }
+
         if (rangeEnd != null) {
             builder.and(QEvent.event.eventDate.before(rangeEnd));
         }
+
         if (rangeStart == null && rangeEnd == null) {
             builder.and(QEvent.event.eventDate.after(LocalDateTime.now()));
         }
+
         if (builder.getValue() != null) {
             events = eventRepository.findAll(builder.getValue(), pageRequest).getContent();
         } else {
@@ -273,29 +282,37 @@ public class EventServiceImpl implements EventService {
                 event.setEventDate(updateEvent.getEventDate());
             }
         }
+
         if (updateEvent.getAnnotation() != null && !updateEvent.getAnnotation().isBlank()) {
             event.setAnnotation(updateEvent.getAnnotation());
         }
+
         if (updateEvent.getCategory() != null) {
             Category category = categoryRepository.findById(updateEvent.getCategory())
                     .orElseThrow(() -> new NotFoundException("Категория с id: " + updateEvent.getCategory() + "не найдена"));
             event.setCategory(category);
         }
+
         if (updateEvent.getDescription() != null && !updateEvent.getDescription().isBlank()) {
             event.setDescription(updateEvent.getDescription());
         }
+
         if (updateEvent.getLocation() != null) {
             event.setLocation(updateEvent.getLocation());
         }
+
         if (updateEvent.getPaid() != null) {
             event.setPaid(updateEvent.getPaid());
         }
+
         if (updateEvent.getParticipantLimit() != null) {
             event.setParticipantLimit(updateEvent.getParticipantLimit());
         }
+
         if (updateEvent.getRequestModeration() != null) {
             event.setRequestModeration(updateEvent.getRequestModeration());
         }
+
         if (updateEvent.getTitle() != null && !updateEvent.getTitle().isBlank()) {
             event.setTitle(updateEvent.getTitle());
         }
@@ -315,6 +332,7 @@ public class EventServiceImpl implements EventService {
 
         Map<String, Long> uriHitMap = viewStatsDto.stream()
                 .collect(Collectors.toMap(ViewStatsDto::getUri, ViewStatsDto::getHits));
+
         for (Event event : events) {
             event.setViews(uriHitMap.getOrDefault("/events/" + event.getId(), 0L));
         }
